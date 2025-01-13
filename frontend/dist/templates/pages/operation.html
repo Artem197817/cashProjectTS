@@ -1,0 +1,33 @@
+<div class="content-container p-0 p-sm-3 m-3 m-sm-4">
+    <h1 class="h1 main-title mb-5 mt-5" id="main-title"></h1>
+    <form class="create-block col-12 col-md-6 col-xl-4 ">
+        <select class="form-select mb-2" id="type">
+            <option id="select-income" value="income">Доход</option>
+            <option id="select-expense" value="expense">Расход</option>
+        </select>
+        <select class="form-select mb-2 mt-1" id="category-select">
+            <option id="category-select-title" selected>Категория</option>
+        </select>
+
+        <input type="number" class="form-control mb-2 mt-1" id="summa" placeholder="Сумма в $...">
+        <div id="summa-error" class="text-center error invalid-feedback mb-3">
+            Введите сумму
+        </div>
+        <input type="date" class="form-control mb-2 mt-1" id="date" placeholder="Дата...">
+        <div id="date-error" class="text-center error invalid-feedback mb-3">
+            Введите дату
+        </div>
+        <input type="text" class="form-control mb-2 mt-1" id="comment" placeholder="Комментарий...">
+        <div id="comment-error" class="text-center error invalid-feedback mb-3">
+            Комментарий
+        </div>
+
+
+        <div class="buttons mt-3">
+            <a href="javascript:void(0)" class="btn btn-success" id="button-create">Создать</a>
+            <a href="#/income-and-expenses" class="btn btn-danger" id="button-cancel">Отмена</a>
+        </div>
+    </form>
+
+</div>
+

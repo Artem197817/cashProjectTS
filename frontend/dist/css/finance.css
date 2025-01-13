@@ -1,0 +1,18 @@
+body{
+    position: relative;
+}
+
+.buttons-block-main{
+    margin-top: 40px;
+}
+.buttons-block-main .btn{
+    width: 100px;
+    
+}
+.buttons-block-main a{
+margin-left: 17px;
+margin-right: 27px;
+}
+.text-popup-income{
+    color: white;
+}

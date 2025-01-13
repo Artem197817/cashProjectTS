@@ -1,0 +1,22 @@
+
+
+.logo-img{
+    margin-left: 32px;
+    margin-top: 32px;
+    margin-bottom: 4px;
+}
+.dropdown-menu{
+    width: 178px;
+    color: #0D6EFD;
+    border:1px solid #0D6EFD;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.dropdown-item:hover{
+    background-color: #0D6EFD;
+    color: white;
+}
+
+.category-arrow{
+    margin-left: 65px;
+}
