@@ -1,11 +1,25 @@
 import {CardCreate} from "../../utils/card-create";
 import {LocalStorageUtil} from "../../utils/localStorageUtil";
 import {HttpUtils} from "../../utils/http-utils";
+import {CategoriesArray, Category, CategoryResponse} from "../../types/category.type";
+import {OperationsArray, OperationsResponse} from "../../types/operations.type";
+import {SimpleResponseType} from "../../types/simple-response.type";
 
 export class Expenses {
-    url = '/categories/expense';
-    urlOperations = '/operations'
-    mainTitle = 'Расходы'
+    private url: string = '/categories/expense';
+    private urlOperations: string = '/operations'
+    private mainTitle: string = 'Расходы'
+    readonly mainTitleElement: HTMLElement | null = null;
+    readonly cardsElement: HTMLElement | null = null;
+    readonly cardAdd: HTMLElement | null = null;
+    readonly allertElement: HTMLElement | null = null;
+    readonly buttonAlertYes: HTMLElement | null = null;
+    readonly buttonAlertNo: HTMLElement | null = null;
+    private addExpensesElement: HTMLElement | null = null;
+    readonly popupTextElement: HTMLElement | null = null;
+    readonly layoutCategoryButton: HTMLElement | null = null;
+    readonly layoutExpensesButton: HTMLElement | null = null;
+    private expenses: CategoriesArray = [];
 
     constructor() {
         this.mainTitleElement = document.getElementById('main-title');
@@ -17,56 +31,72 @@ export class Expenses {
         this.buttonAlertYes = document.getElementById('yes-alert');
         this.buttonAlertNo = document.getElementById('no-alert');
         this.popupTextElement = document.getElementById('text-popup-income');
-        this.popupTextElement.style.color = 'white';
+        if (this.popupTextElement) {
+            this.popupTextElement.style.color = 'white';
+        }
         this.layoutCategoryButton = document.getElementById('layout-category');
-        this.layoutCategoryButton.classList.add('active')
+        if (this.layoutCategoryButton) {
+            this.layoutCategoryButton.classList.add('active')
+        }
         this.layoutExpensesButton = document.getElementById('layout-expenses');
-        this.layoutExpensesButton.classList.add('active')
+        if (this.layoutExpensesButton) {
+            this.layoutExpensesButton.classList.add('active')
+        }
 
         this.createContent().then();
     }
 
-    async createContent() {
+    private async createContent(): Promise<void> {
         this.expenses = await this.getExpenses();
-        this.mainTitleElement.innerText = this.mainTitle;
+        if (this.mainTitleElement) {
+            this.mainTitleElement.innerText = this.mainTitle;
+        }
         this.expenses.forEach(element => {
-            const card = CardCreate.cardCreateIncomesOrExpenses(element.title);
-            const buttonDelete = card.querySelector('.delete')
-            buttonDelete.addEventListener('click', (event) => {
-                event.stopPropagation();
-                this.deleteExpenses(element);
-            });
-            const buttonEdit = card.querySelector('.edit')
-            buttonEdit.addEventListener('click', (event) => {
-                event.stopPropagation();
-                this.editExpenses(element);
-            });
+            const card: HTMLElement = CardCreate.cardCreateIncomesOrExpenses(element.title);
+            const buttonDelete: Element | null = card.querySelector('.delete')
+            if (buttonDelete) {
+                buttonDelete.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    this.deleteExpenses(element);
+                });
+            }
 
-            this.cardsElement.appendChild(card);
+            const buttonEdit: Element | null = card.querySelector('.edit')
+            if (buttonEdit) {
+                buttonEdit.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    this.editExpenses(element);
+                });
+            }
 
+            if (this.cardsElement) {
+                this.cardsElement.appendChild(card);
+            }
         });
-
-        this.cardAdd.innerHTML =
-            '            <div class="mx-auto my-auto">\n' +
-            '                <img src="../../images/plus.png" alt="+" class="plus">\n' +
-            '            </div>';
-        this.cardsElement.appendChild(this.cardAdd);
+        if (this.cardAdd && this.cardsElement) {
+            this.cardAdd.innerHTML =
+                '            <div class="mx-auto my-auto">\n' +
+                '                <img src="../../images/plus.png" alt="+" class="plus">\n' +
+                '            </div>';
+            this.cardsElement.appendChild(this.cardAdd);
+        }
         this.addExpensesElement = document.getElementById('add');
-        this.addExpensesElement.addEventListener('click', this.addExpenses.bind(this));
-
+        if (this.addExpensesElement) {
+            this.addExpensesElement.addEventListener('click', this.addExpenses.bind(this));
+        }
     }
 
-    async getExpenses() {
-        const result = await HttpUtils.request(this.url);
+    private async getExpenses(): Promise<CategoriesArray> {
+        const result: CategoryResponse = await HttpUtils.request(this.url);
         if (result.error) {
-            console.log(result.message)
+            console.log(result.response.message)
             return [];
         }
         return result.response;
 
     }
 
-    editExpenses(element) {
+    private editExpenses(element: Category): void {
         if (LocalStorageUtil.getCategory()) {
             LocalStorageUtil.removeCategory()
         }
@@ -74,10 +104,10 @@ export class Expenses {
         window.location.href = '#/edit-category-expenses'
     }
 
-    async deleteExpenses(element) {
-        const isConfirmed = await this.popupAlertBehaviour();
+    private async deleteExpenses(element: Category): Promise<void> {
+        const isConfirmed: boolean = await this.popupAlertBehaviour();
         if (isConfirmed) {
-            const operations = await this.getOperations();
+            const operations: OperationsArray = await this.getOperations();
             if (operations.length > 0) {
                 operations.forEach(operation => {
                     if (operation.category === element.title) {
@@ -85,7 +115,7 @@ export class Expenses {
                     }
                 });
             }
-            const result = await HttpUtils.request(this.url + '/' + element.id, 'DELETE');
+            const result: SimpleResponseType = await HttpUtils.request(this.url + '/' + element.id, 'DELETE');
             if (result.error) {
                 console.log(result.message)
                 return;
@@ -94,39 +124,45 @@ export class Expenses {
         }
     }
 
-    async getOperations(period = 'all') {
-        const result = await HttpUtils.request(this.urlOperations + '?period=' + period);
+    private async getOperations(period: string = 'all'): Promise<OperationsArray> {
+        const result: OperationsResponse = await HttpUtils.request(this.urlOperations + '?period=' + period);
         if (result.error) {
-            console.log(result.message)
+            console.log(result.response.message)
             return [];
         }
         return !result.response ? [] : result.response;
     }
 
-    async deleteOperation(id) {
-        const result = await HttpUtils.request(this.urlOperations + '/' + id, 'DELETE');
+    private async deleteOperation(id: number): Promise<void> {
+        const result: SimpleResponseType = await HttpUtils.request(this.urlOperations + '/' + id, 'DELETE');
         if (result.error) {
             console.log(result.message)
         }
     }
 
-    addExpenses() {
+    private addExpenses(): void {
         window.location.href = '#/create-category-expenses';
     }
 
-    popupAlertBehaviour() {
+    private popupAlertBehaviour(): Promise<boolean> {
         return new Promise((resolve) => {
-            this.allertElement.style.display = 'flex';
+            if (this.allertElement)
+                this.allertElement.style.display = 'flex';
 
-            this.buttonAlertNo.addEventListener('click', () => {
-                this.allertElement.style.display = 'none';
-                resolve(false);
-            });
-
-            this.buttonAlertYes.addEventListener('click', () => {
-                this.allertElement.style.display = 'none';
-                resolve(true);
-            });
+            if (this.buttonAlertNo) {
+                this.buttonAlertNo.addEventListener('click', () => {
+                    if (this.allertElement)
+                        this.allertElement.style.display = 'none';
+                    resolve(false);
+                });
+            }
+            if (this.buttonAlertYes) {
+                this.buttonAlertYes.addEventListener('click', () => {
+                    if (this.allertElement)
+                        this.allertElement.style.display = 'none';
+                    resolve(true);
+                });
+            }
         });
     }
 }

@@ -1,12 +1,27 @@
 import {CardCreate} from "../../utils/card-create";
 import {LocalStorageUtil} from "../../utils/localStorageUtil";
 import {HttpUtils} from "../../utils/http-utils";
+import {CategoriesArray, Category, CategoryResponse} from "../../types/category.type";
+import {OperationsArray, OperationsResponse} from "../../types/operations.type";
+import {SimpleResponseType} from "../../types/simple-response.type";
 
 
 export class Income {
-    url = '/categories/income';
-    urlOperations = '/operations'
-    mainTitle = 'Доходы'
+    private url:string = '/categories/income';
+   private urlOperations:string = '/operations'
+   private mainTitle:string = 'Доходы'
+    readonly mainTitleElement: HTMLElement | null = null;
+    readonly cardsElement: HTMLElement | null = null;
+    readonly cardAdd: HTMLElement | null = null;
+    readonly allertElement: HTMLElement | null = null;
+    readonly buttonAlertYes: HTMLElement | null = null;
+    readonly buttonAlertNo: HTMLElement | null = null;
+    private addIncomeElement: HTMLElement | null = null;
+    readonly layoutCategoryButton: HTMLElement | null = null;
+    readonly layoutIncomeButton: HTMLElement | null = null;
+    private incomes: CategoriesArray = [];
+
+
 
     constructor() {
         this.mainTitleElement = document.getElementById('main-title');
@@ -18,53 +33,70 @@ export class Income {
         this.buttonAlertYes = document.getElementById('yes-alert');
         this.buttonAlertNo = document.getElementById('no-alert');
         this.layoutCategoryButton = document.getElementById('layout-category');
-        this.layoutCategoryButton.classList.add('active')
+       if(this.layoutCategoryButton){
+           this.layoutCategoryButton.classList.add('active')
+       }
         this.layoutIncomeButton = document.getElementById('layout-income');
-        this.layoutIncomeButton.classList.add('active')
+        if(this.layoutIncomeButton){
+           this.layoutIncomeButton.classList.add('active')
+       }
+
 
         this.createContent().then();
     }
 
-    async createContent() {
+   private async createContent(): Promise<void> {
         this.incomes = await this.getIncomes();
-        this.mainTitleElement.innerText = this.mainTitle;
+        if(this.mainTitleElement){
+            this.mainTitleElement.innerText = this.mainTitle;
+        }
         this.incomes.forEach(element => {
-            const card = CardCreate.cardCreateIncomesOrExpenses(element.title);
-            const buttonDelete = card.querySelector('.delete')
-            buttonDelete.addEventListener('click', (event) => {
-                event.stopPropagation();
-                this.deleteIncome(element);
-            });
-            const buttonEdit = card.querySelector('.edit')
-            buttonEdit.addEventListener('click', (event) => {
-                event.stopPropagation();
-                this.editIncome(element);
-            });
+            const card: HTMLElement = CardCreate.cardCreateIncomesOrExpenses(element.title);
+            const buttonDelete: Element | null = card.querySelector('.delete')
+            if(buttonDelete){
+                buttonDelete.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    this.deleteIncome(element);
+                });
+            }
+            const buttonEdit: Element | null = card.querySelector('.edit')
+           if (buttonEdit){
+               buttonEdit.addEventListener('click', (event) => {
+                   event.stopPropagation();
+                   this.editIncome(element);
+               });
+           }
 
-            this.cardsElement.appendChild(card);
+            if(this.cardsElement) {
+                this.cardsElement.appendChild(card);
+            }
+
 
         });
 
-        this.cardAdd.innerHTML =
-            '            <div class="mx-auto my-auto">\n' +
-            '                <img src="../../images/plus.png" alt="+" class="plus">\n' +
-            '            </div>';
-        this.cardsElement.appendChild(this.cardAdd);
-        this.addIncomeElement = document.getElementById('add');
-        this.addIncomeElement.addEventListener('click', this.addIncome.bind(this));
-
+        if(this.cardsElement&&this.cardAdd) {
+            this.cardAdd.innerHTML =
+                '            <div class="mx-auto my-auto">\n' +
+                '                <img src="../../images/plus.png" alt="+" class="plus">\n' +
+                '            </div>';
+            this.cardsElement.appendChild(this.cardAdd);
+            this.addIncomeElement = document.getElementById('add');
+           if(this.addIncomeElement){
+               this.addIncomeElement.addEventListener('click', this.addIncome.bind(this));
+           }
+        }
     }
 
-    async getIncomes() {
-        const result = await HttpUtils.request(this.url);
+   private async getIncomes(): Promise<CategoriesArray> {
+        const result: CategoryResponse = await HttpUtils.request(this.url);
         if (result.error) {
-            console.log(result.message)
+            console.log(result.response.message)
             return [];
         }
         return result.response;
     }
 
-    editIncome(element) {
+   private editIncome(element: Category): void {
 
         if (LocalStorageUtil.getCategory()) {
             LocalStorageUtil.removeCategory()
@@ -74,10 +106,10 @@ export class Income {
     }
 
 
-    async deleteIncome(element) {
-        const isConfirmed = await this.popupAlertBehaviour();
+   private async deleteIncome(element: Category): Promise<void> {
+        const isConfirmed: boolean = await this.popupAlertBehaviour();
         if (isConfirmed) {
-            const operations = await this.getOperations();
+            const operations: OperationsArray = await this.getOperations();
             if (operations.length > 0) {
                 operations.forEach(operation => {
                     if (operation.category === element.title) {
@@ -85,7 +117,7 @@ export class Income {
                     }
                 });
             }
-            const result = await HttpUtils.request(this.url + '/' + element.id, 'DELETE');
+            const result: SimpleResponseType = await HttpUtils.request(this.url + '/' + element.id, 'DELETE');
             if (result.error) {
                 console.log(result.message)
                 return;
@@ -94,37 +126,40 @@ export class Income {
         }
     }
 
-    async getOperations(period = 'all') {
-        const result = await HttpUtils.request(this.urlOperations + '?period=' + period);
+   private async getOperations(period: string = 'all'): Promise<OperationsArray> {
+        const result: OperationsResponse = await HttpUtils.request(this.urlOperations + '?period=' + period);
         if (result.error) {
-            console.log(result.message)
+            console.log(result.response.message)
             return [];
         }
         return !result.response ? [] : result.response;
     }
 
-    async deleteOperation(id) {
-        const result = await HttpUtils.request(this.urlOperations + '/' + id, 'DELETE');
+   private async deleteOperation(id: number): Promise<void> {
+        const result: SimpleResponseType = await HttpUtils.request(this.urlOperations + '/' + id, 'DELETE');
         if (result.error) {
             console.log(result.message)
         }
     }
 
-    addIncome() {
+   private addIncome(): void {
         window.location.href = '#/create-category-income';
 
     }
 
-    popupAlertBehaviour() {
+   private popupAlertBehaviour(): Promise<boolean> {
         return new Promise((resolve) => {
+            if (this.allertElement)
             this.allertElement.style.display = 'flex';
-
+            if (this.buttonAlertNo)
             this.buttonAlertNo.addEventListener('click', () => {
+                if (this.allertElement)
                 this.allertElement.style.display = 'none';
                 resolve(false);
             });
-
-            this.buttonAlertYes.addEventListener('click', () => {
+            if (this.buttonAlertYes)
+                this.buttonAlertYes.addEventListener('click', () => {
+                if (this.allertElement)
                 this.allertElement.style.display = 'none';
                 resolve(true);
             });

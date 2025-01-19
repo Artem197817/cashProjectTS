@@ -1,44 +1,59 @@
 import {HttpUtils} from "../../utils/http-utils";
+import {CategoryResponse} from "../../types/category.type";
 
 export class CreateCategoryExpenses {
 
-    url = '/categories/expense';
-    mainTitle = "Создание категории расходов"
+    private url: string = '/categories/expense';
+    private mainTitle: string = "Создание категории расходов"
+    readonly mainTitleElement: HTMLElement | null = null;
+    readonly inputCategory: HTMLElement | null = null;
+    readonly buttonCreate: HTMLElement | null = null;
+    readonly buttonCancel: HTMLElement | null = null;
 
     constructor() {
         this.mainTitleElement = document.getElementById("main-title");
-        this.mainTitleElement.innerText = this.mainTitle;
+        if (this.mainTitleElement) {
+            this.mainTitleElement.innerText = this.mainTitle;
+        }
         this.inputCategory = document.getElementById("input-category");
         this.buttonCreate = document.getElementById("button-create");
         this.buttonCancel = document.getElementById("button-cancel");
-        this.buttonCancel.setAttribute('href', '#/expenses')
-        this.buttonCreate.addEventListener('click', this.createCategory.bind(this));
+        if (this.buttonCreate) {
+            this.buttonCreate.addEventListener('click', this.createCategory.bind(this));
+        }
+        if (this.buttonCancel)
+            this.buttonCancel.setAttribute('href', '#/expenses')
+
 
     }
 
-    validateInput() {
-        let isValid = true;
-
-        if (this.inputCategory.value.trim()) {
-            this.inputCategory.classList.remove('is-invalid');
-        } else {
-            this.inputCategory.classList.add('is-invalid');
-            isValid = false;
+    private validateInput(): boolean {
+        let isValid: boolean = true;
+        if (this.inputCategory) {
+            if ((this.inputCategory as HTMLInputElement).value.trim()) {
+                this.inputCategory.classList.remove('is-invalid');
+            } else {
+                this.inputCategory.classList.add('is-invalid');
+                isValid = false;
+            }
         }
         return isValid;
     }
 
-    async createCategory() {
+   private async createCategory(): Promise<void> {
         if (this.validateInput()) {
-            const result = await HttpUtils.request(this.url, 'POST', true,
+            const result: CategoryResponse = await HttpUtils.request(this.url, 'POST', true,
                 {
-                    title: this.inputCategory.value.trim()
+                    title: (this.inputCategory as HTMLInputElement).value.trim()
                 });
-            if (result.error || !result.response) {
-                const inputErrorElement = document.getElementById('input-category-error');
-                inputErrorElement.innerText = 'Что-то пошло не так ' + result.message;
+            if (result.error) {
+                const inputErrorElement: HTMLElement | null = document.getElementById('input-category-error');
+                if(inputErrorElement)
+                inputErrorElement.innerText = 'Что-то пошло не так ' + result.response.message;
+               if(this.inputCategory)
                 this.inputCategory.classList.add('is-invalid');
             } else {
+                if (this.inputCategory)
                 this.inputCategory.classList.remove('is-invalid');
                 window.location.href = '#/expenses'
             }

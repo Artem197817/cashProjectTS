@@ -1,5 +1,5 @@
-import {AuthUtil} from "../utils/auth-util";
-import {HttpUtils} from "../utils/http-utils";
+import {AuthUtil} from "../../utils/auth-util";
+import {HttpUtils} from "../../utils/http-utils";
 
 export class Logout {
 

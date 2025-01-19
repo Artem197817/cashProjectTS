@@ -1,11 +1,18 @@
-import {Chart, registerables} from 'chart.js';
+import {Chart, ChartConfiguration, ChartData, ChartDataset, registerables} from 'chart.js';
+
 Chart.register(...registerables);
 import {HttpUtils} from "../utils/http-utils";
+import {OperationsArray, OperationsResponse} from "../types/operations.type";
+import {FormatDateString} from "vanilla-calendar-pro";
 
 export class Dashboard {
-    url = '/operations'
-    mainTitle = 'Главная'
-    colors = [
+    readonly mainTitleElement: HTMLElement | null = null;
+    readonly buttonsFin: HTMLElement | null = null;
+    readonly canvasIncome: CanvasRenderingContext2D | null = null;
+    readonly canvasExpenses: CanvasRenderingContext2D | null = null;
+    private url: string = '/operations'
+    private mainTitle: string = 'Главная'
+    public colors: string[] = [
         "#FF5733",
         "#33FF57",
         "#3357FF",
@@ -36,54 +43,76 @@ export class Dashboard {
         "#F08080",
         "#33FF8C",
     ];
+    readonly layoutMainButton: HTMLElement | null = null;
+    private dataIncome: ChartData = {labels: [], datasets: []};
+    private dataExpenses: ChartData = {labels: [], datasets: []};
+    static chartIncome: Chart | null = null;
+    static chartExpenses: Chart | null = null;
 
     constructor() {
         this.mainTitleElement = document.getElementById('main-title');
-        this.mainTitleElement.innerText = this.mainTitle;
-        this.canvasIncome = document.getElementById('canvas-income').getContext('2d');
-        this.canvasExpenses = document.getElementById('canvas-expenses').getContext('2d');
+        if (this.mainTitleElement) {
+            this.mainTitleElement.innerText = this.mainTitle;
+        }
+
+        const canvasI = document.getElementById('canvas-income') as HTMLCanvasElement | null;
+        this.canvasIncome = canvasI ? canvasI.getContext('2d') : null;
+
+        const canvasE = document.getElementById('canvas-expenses') as HTMLCanvasElement | null;
+        this.canvasExpenses = canvasE ? canvasE.getContext('2d') : null;
+
         this.buttonsFin = document.getElementById('btn-block-fin');
-        this.buttonsFin.style.display = 'none';
+        if (this.buttonsFin) {
+            this.buttonsFin.style.display = 'none';
+        }
+
         this.layoutMainButton = document.getElementById('layout-main');
-        this.layoutMainButton.classList.add('active')
+        if (this.layoutMainButton) {
+            this.layoutMainButton.classList.add('active');
+        }
+
 
         this.createData().then();
     }
 
-    async createData(operations = null) {
+    async createData(operations: OperationsArray | null = null) {
         if (!operations) {
             operations = await this.getOperations();
         }
         if (operations) {
-            const expenses = operations.filter(item => item.type === 'expense');
-            const incomes = operations.filter(item => item.type === 'income');
+            const expenses: OperationsArray = operations.filter(item => item.type === 'expense');
+            const incomes: OperationsArray = operations.filter(item => item.type === 'income');
 
-            function aggregateByCategory(items) {
+            const aggregateByCategory = (items: OperationsArray) => {
                 return items.reduce((accumulator, current) => {
-                    const category = current.category;
-                    const amount = current.amount;
+                    const category: string = current.category;
+                    const amount: number = current.amount;
 
                     if (!accumulator[category]) {
-                        accumulator[category] = {category: category, total: 0};
+                        accumulator[category] = {category, total: 0};
                     }
 
                     accumulator[category].total += amount;
 
                     return accumulator;
-                }, {});
+                }, {} as Record<string, { category: string; total: number }>);
             }
 
             const aggregatedExpenses = Object.values(aggregateByCategory(expenses));
             const aggregatedIncomes = Object.values(aggregateByCategory(incomes));
 
-            this.dataIncome = {};
-            this.dataIncome.labels = [];
-            const labelIncome = 'Расходы';
-            let index = 0;
-            let incomeTotal = [];
-            let backgroundColorsI = [];
+            const labelIncome: string = 'Расходы';
+            let index: number = 0;
+            let incomeTotal: number[] = [];
+            let backgroundColorsI: string[] = [];
+            if (this.dataIncome){
+                this.dataIncome.labels = []
+                this.dataIncome.datasets = []
+            }
             aggregatedIncomes.forEach(item => {
-                this.dataIncome.labels.push(item.category);
+                if(this.dataIncome.labels){
+                    this.dataIncome.labels.push(item.category);
+                }
                 incomeTotal.push(item.total);
                 if (index > this.colors.length - 1) {
                     index = 0;
@@ -95,15 +124,19 @@ export class Dashboard {
                 data: incomeTotal,
                 backgroundColor: backgroundColorsI,
                 borderColor: backgroundColorsI,
-            }]
+            }] as ChartDataset[];
 
-            this.dataExpenses = {};
-            this.dataExpenses.labels = [];
-            const labelExpenses = 'Расходы';
+
+            const labelExpenses: string = 'Расходы';
             index = 0;
-            let expensesTotal = [];
-            let backgroundColors = [];
+            let expensesTotal: number[] = [];
+            let backgroundColors: string[] = [];
+            if (this.dataExpenses){
+                this.dataExpenses.labels = []
+                this.dataExpenses.datasets = []
+            }
             aggregatedExpenses.forEach(item => {
+                if(this.dataExpenses.labels)
                 this.dataExpenses.labels.push(item.category);
                 expensesTotal.push(item.total);
                 if (index > this.colors.length - 1) {
@@ -116,7 +149,7 @@ export class Dashboard {
                 data: expensesTotal,
                 backgroundColor: backgroundColors,
                 borderColor: backgroundColors,
-            }]
+            }]as ChartDataset[];
 
             if (Dashboard.chartIncome) {
                 Dashboard.chartIncome.destroy();
@@ -125,38 +158,41 @@ export class Dashboard {
                 Dashboard.chartExpenses.destroy();
             }
 
-            Dashboard.chartIncome = new Chart(this.canvasIncome, this.getConfig(this.dataIncome));
-            Dashboard.chartExpenses = new Chart(this.canvasExpenses, this.getConfig(this.dataExpenses));
-
+            if(this.canvasIncome && this.dataIncome){
+                Dashboard.chartIncome = new Chart(this.canvasIncome, this.getConfig(this.dataIncome));
+            }
+            if(this.canvasExpenses && this.dataExpenses) {
+                Dashboard.chartExpenses = new Chart(this.canvasExpenses, this.getConfig(this.dataExpenses));
+            }
         }
     }
 
-
-    async getOperations(period = 'all', dateFilterFrom = null, dateFilterTo = null) {
-        const result = await HttpUtils.request(this.url + '?period=' + period
+   private async getOperations(period:string = 'all', dateFilterFrom: FormatDateString | null = null,
+                        dateFilterTo: FormatDateString | null = null): Promise<OperationsArray> {
+        const result: OperationsResponse = await HttpUtils.request(this.url + '?period=' + period
             + '&dateFrom=' + dateFilterFrom + '&dateTo=' + dateFilterTo);
         if (result.error) {
-            console.log(result.message)
+            console.log(result.response.message)
             return [];
         }
         return !result.response ? [] : result.response;
     }
 
-    static async updateDiag(period = 'all', dateFilterFrom = null, dateFilterTo = null) {
+   public static async updateDiag(period:string = 'all', dateFilterFrom: FormatDateString | null = null,
+                            dateFilterTo: FormatDateString | null = null): Promise<void> {
 
-        const dashboard = new Dashboard();
+        const dashboard: Dashboard = new Dashboard();
         dashboard.updateDiagram(period, dateFilterFrom, dateFilterTo).then();
     }
 
-    async updateDiagram(period = 'all', dateFilterFrom = null, dateFilterTo = null) {
-        console.log(Dashboard.chartIncome)
-        console.log(Dashboard.chartExpenses)
+   private async updateDiagram(period:string = 'all', dateFilterFrom: FormatDateString | null = null,
+                               dateFilterTo: FormatDateString | null = null): Promise<void> {
 
-        const operations = await this.getOperations(period, dateFilterFrom, dateFilterTo);
+        const operations: OperationsArray = await this.getOperations(period, dateFilterFrom, dateFilterTo);
         this.createData(operations).then();
     }
 
-    getConfig(data) {
+   private getConfig(data: ChartData): ChartConfiguration  {
 
         return {
             type: 'pie',

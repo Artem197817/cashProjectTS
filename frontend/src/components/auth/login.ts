@@ -1,6 +1,6 @@
-import {AuthUtil} from "../utils/auth-util";
-import {HttpUtils} from "../utils/http-utils";
-import {ApiResponse} from "../types/auth-response.type";
+import {AuthUtil} from "../../utils/auth-util";
+import {HttpUtils} from "../../utils/http-utils";
+import {ApiResponse} from "../../types/auth-response.type";
 
 export class Login {
 

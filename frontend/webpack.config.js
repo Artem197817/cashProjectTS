@@ -4,14 +4,14 @@ const CopyPlugin = require("copy-webpack-plugin");
 
 
 module.exports = {
-    entry: './src/app.js',
+    entry: './src/app.ts',
     mode: 'development',
     devtool: 'inline-source-map',
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
     },
         output: {
-            filename: 'main.js',
+            filename: 'app.js',
             path: path.resolve(__dirname, 'dist'),
             clean: true,
         },

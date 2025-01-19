@@ -1,27 +1,39 @@
+import {Category} from "../types/category.type";
+import {Operation} from "../types/operations.type";
+
 export class LocalStorageUtil {
 
-    static CategoryKey = 'category'
-    static OperationKey = 'operation'
+   public static CategoryKey:string = 'category'
+    public static OperationKey:string = 'operation'
 
-    static setCategory(value){
+   public static setCategory(value: Category): void{
         localStorage.setItem(this.CategoryKey, JSON.stringify(value));
     }
-    static getCategory(){
-        return JSON.parse(localStorage.getItem(this.CategoryKey));
+   public static getCategory(): Category | null {
+       const category: string | null = localStorage.getItem(this.CategoryKey);
+    if(category) {
+        return JSON.parse(category);
     }
+    return null;
+   }
 
-    static removeCategory(key){
+   public static removeCategory(): void{
         localStorage.removeItem(this.CategoryKey);
     }
 
-    static setOperation(value){
+    public static setOperation(value: Operation): void{
         localStorage.setItem(this.OperationKey, JSON.stringify(value));
     }
-    static getOperation(){
-        return JSON.parse(localStorage.getItem(this.OperationKey));
+    public static getOperation(): Operation | null{
+
+       const operation: string | null = localStorage.getItem(this.OperationKey);
+       if(operation) {
+           return JSON.parse(operation);
+       }
+        return null;
     }
 
-    static removeOperation(key){
+    public static removeOperation(): void{
         localStorage.removeItem(this.OperationKey);
     }
 }

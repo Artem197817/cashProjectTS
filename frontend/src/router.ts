@@ -1,7 +1,7 @@
 import {Dashboard} from "./components/dashboard";
-import {Login} from "./components/login";
-import {SignUp} from "./components/sign-up";
-import {Logout} from "./components/logout";
+import {Login} from "./components/auth/login";
+import {SignUp} from "./components/auth/sign-up";
+import {Logout} from "./components/auth/logout";
 import {AuthUtil} from "./utils/auth-util";
 import {Income} from "./components/income/income";
 import {Layout} from "./components/layout";
@@ -10,20 +10,25 @@ import {CreateCategoryIncomes} from "./components/income/create-category-incomes
 import {CreateCategoryExpenses} from "./components/expenses/create-category-expenses";
 import {EditCategoryIncomes} from "./components/income/edit-category-income";
 import {EditCategoryExpenses} from "./components/expenses/edit-category-expenses";
-import {IncomeAndExpenses} from "./components/income-expenses";
-import {CreateOperation} from "./components/create-operation";
+import {IncomeAndExpenses} from "./components/operation/income-expenses";
+import {CreateOperation} from "./components/operation/create-operation";
 import {SecondLayout} from "./components/second-layout";
-import {EditOperation} from "./components/edit-operation";
+import {EditOperation} from "./components/operation/edit-operation";
 import {CalendarUtils} from "./utils/calendar";
 import {RouteType} from "./types/route.type";
+import {Calendar} from "vanilla-calendar-pro";
 
 export class Router {
     readonly pageTitleElement: HTMLElement | null;
     readonly contentElement: HTMLElement | null;
     readonly adminLteStyleElement: HTMLElement | null;
     private routes: RouteType[];
-    private calendar: CalendarUtils;
-    private currentRoute: RouteType | null;
+    private calendar: Calendar| null = null;
+    private currentRoute: RouteType= {
+        route: '#/',
+        template: '/templates/pages/dashboard.html',
+        load: () => {},
+    };
 
     constructor() {
         this.pageTitleElement = document.getElementById("page-title");
@@ -39,7 +44,7 @@ export class Router {
                 useLayout: '/templates/layout.html',
                 useSecondLayout: '/templates/second-layout.html',
                 requiresAuth: true,
-                styles: [],
+
                 load: () => {
                     new Layout();
                     new SecondLayout();
@@ -68,7 +73,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/sign-up',
@@ -81,7 +86,7 @@ export class Router {
                     document.body.classList.remove('register-page');
                     document.body.style.height = 'auto';
                 },
-                styles: []
+
             },
             {
                 route: '#/logout',
@@ -102,7 +107,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/expenses',
@@ -117,7 +122,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/create-category-income',
@@ -132,7 +137,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/create-category-expenses',
@@ -147,7 +152,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/edit-category-income',
@@ -162,7 +167,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/edit-category-expenses',
@@ -177,7 +182,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/income-and-expenses',
@@ -186,12 +191,12 @@ export class Router {
                 useLayout: '/templates/layout.html',
                 useSecondLayout: '/templates/second-layout.html',
                 requiresAuth: true,
-                styles: [],
+
                 load: () => {
                     new Layout();
                     new SecondLayout();
                     this.calendar = new CalendarUtils().calendar;
-                    new IncomeAndExpenses(this.calendar);
+                    new IncomeAndExpenses();
                 },
                 unload: () => {
                     if (this.calendar) {
@@ -212,7 +217,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
             {
                 route: '#/operation-edit',
@@ -227,7 +232,7 @@ export class Router {
                 unload: () => {
 
                 },
-                styles: []
+
             },
         ];
     }
@@ -235,7 +240,7 @@ export class Router {
     public async openRoute(): Promise<void> {
 
         const urlRoute: string = window.location.hash.split('?')[0];
-        const newRoute: RouteType = this.routes.find(item => item.route === urlRoute);
+        const newRoute: RouteType | undefined = this.routes.find(item => item.route === urlRoute);
 
         if (!newRoute) {
             window.location.href = "#/";
@@ -253,7 +258,9 @@ export class Router {
         try {
 
             await this.loadTemplate(newRoute);
-            this.applyStyles(newRoute.styles);
+            if(newRoute.styles){
+                this.applyStyles(newRoute.styles);
+            }
             if (this.pageTitleElement) {
                 this.pageTitleElement.innerText = <string>newRoute.title;
             }
@@ -269,7 +276,7 @@ export class Router {
         this.currentRoute = newRoute;
     }
 
-  private  async loadTemplate(route): Promise<void> {
+  private  async loadTemplate(route: RouteType): Promise<void> {
         let contentBlock: HTMLElement | null = this.contentElement;
 
         if (route.useLayout && contentBlock) {
@@ -293,22 +300,23 @@ export class Router {
         }
 
         try {
-            const templateResponse: Response = await fetch(route.template);
-            if (!templateResponse.ok) throw new Error('Failed to load template');
-            if (contentBlock) {
-                contentBlock.innerHTML = await templateResponse.text();
+            if(route.template) {
+                const templateResponse: Response = await fetch(route.template);
+                if (!templateResponse.ok) throw new Error('Failed to load template');
+                if (contentBlock) {
+                    contentBlock.innerHTML = await templateResponse.text();
+                }
             }
-
         } catch (error) {
             console.error('Error loading template:', error);
             throw error;
         }
     }
 
-  private  async activateRoute(e, oldRoute:RouteType |string| null = null): Promise<void> {
+  private  async activateRoute(e: any, oldRoute:RouteType |string| null = null): Promise<void> {
 
         if (oldRoute) {
-            const currentRoute:RouteType = this.routes.find(item => item.route === oldRoute);
+            const currentRoute:RouteType | undefined = this.routes.find(item => item.route === oldRoute);
 
             if (currentRoute && currentRoute.styles && currentRoute.styles.length > 0) {
                 currentRoute.styles.forEach(style => {
@@ -325,9 +333,9 @@ export class Router {
         }
 
         const urlRoute:string = window.location.hash.split('?')[0];
-        const newRoute:RouteType = this.routes.find(item => item.route === urlRoute);
+        const newRoute:RouteType | undefined = this.routes.find(item => item.route === urlRoute);
 
-        if (newRoute) {
+        if (newRoute?.styles) {
             this.applyStyles(newRoute.styles);
 
             if (newRoute.title && this.pageTitleElement) {
@@ -345,7 +353,7 @@ export class Router {
         }
     }
 
-   private applyStyles(styles): void {
+   private applyStyles(styles: string[] | null): void {
         if (styles && styles.length > 0) {
             styles.forEach(style => {
                 const existingStyleLink:HTMLElement | null = document.querySelector(`link[href='/css/${style}']`);

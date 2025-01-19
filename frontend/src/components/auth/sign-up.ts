@@ -1,6 +1,6 @@
-import {AuthUtil} from "../utils/auth-util";
-import {HttpUtils} from "../utils/http-utils";
-import {ApiResponse} from "../types/auth-response.type";
+import {AuthUtil} from "../../utils/auth-util";
+import {HttpUtils} from "../../utils/http-utils";
+import {ApiResponse} from "../../types/auth-response.type";
 
 export class SignUp {
 
@@ -21,7 +21,7 @@ export class SignUp {
         this.passwordElement = document.getElementById('password');
         this.repeatPasswordElement = document.getElementById('repeat-password');
         this.fullNameElement = document.getElementById('fullName');
-        this.buttonLoginElement = document.getElementById('buttonLogin');
+        this.buttonLoginElement = document.getElementById('button-login');
         this.commonErrorElement = document.getElementById('common-error');
         if(this.buttonLoginElement){
         this.buttonLoginElement.addEventListener('click',

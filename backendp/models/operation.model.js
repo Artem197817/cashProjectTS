@@ -30,7 +30,7 @@ class OperationModel {
                     dateFilterTo = moment(dateTo);
                 }
                 break;
-            default: return operations({user_id: userId}).get();
+            // default: return operations({user_id: userId}).get();
         }
 
 

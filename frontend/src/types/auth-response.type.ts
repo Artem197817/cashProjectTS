@@ -28,7 +28,6 @@ interface ErrorResponse {
     };
 }
 
-
 interface SuccessResponse {
     error: false;
     response: {
@@ -37,5 +36,9 @@ interface SuccessResponse {
     };
 }
 
+export type ApiResponse = ErrorResponse | SuccessResponse;
 
- export type ApiResponse = ErrorResponse | SuccessResponse;
+export interface RefreshResponse {
+    tokens: AuthTokens;
+}
+
