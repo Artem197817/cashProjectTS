@@ -69,7 +69,7 @@ export class SignUp {
 
         if(this.fullNameElement && this.passwordElement && this.emailElement
             && this.repeatPasswordElement && this.fullNameElement) {
-            if ((this.fullNameElement as HTMLInputElement).value.trim()) {
+            if ((this.fullNameElement as HTMLInputElement).value.trim().split( ' ').length === 2 ) {
                 this.fullNameElement.classList.remove('is-invalid');
             } else {
                 this.fullNameElement.classList.add('is-invalid');

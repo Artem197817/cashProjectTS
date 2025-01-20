@@ -70,28 +70,30 @@ export class Layout {
         this.linksMain.forEach(button => {
             button.classList.remove('active')
         });
-        window.onload = this.sidebarBehaviour.bind(this);
-        window.onresize = this.sidebarBehaviour.bind(this);
 
+        const observer = new MutationObserver(() => {
+            this.sidebarBehaviour();
+        });
+        const config = { childList: true, subtree: true };
+        observer.observe(document.body, config);
     }
 
-   private sidebarBehaviour():void {
+    private sidebarBehaviour(): void {
         this.bodyElement = document.querySelector('body');
         const width: number = window.innerWidth;
-        if(this.asideElement) {
+        if (this.asideElement && this.bodyElement) {
             if (width > 849) {
-                if (this.bodyElement)
                 this.asideElement.style.height = `${this.bodyElement.scrollHeight}px`;
             } else {
                 this.asideElement.style.height = `600px`;
             }
-            if(this.bodyElement){
-                if (this.bodyElement.scrollHeight < window.innerHeight) {
-                    this.asideElement.style.height = '100vh'
-                }
+
+            if (this.bodyElement.scrollHeight < window.innerHeight) {
+                this.asideElement.style.height = '100vh'
             }
         }
     }
+
 
     static async setBalance() {
         const result: BalanceType = await HttpUtils.request(this.url);
